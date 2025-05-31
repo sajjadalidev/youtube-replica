@@ -2,6 +2,8 @@ import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
 const uploadOnCloudniany = async (localFilePath) => {
+  if (!localFilePath) return null;
+
   // Configuration
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_NAME,
@@ -9,37 +11,22 @@ const uploadOnCloudniany = async (localFilePath) => {
     api_secret: process.env.CLOUDINARY_SECRET_KEY,
   });
 
-  if (!localFilePath) return null;
-  // Upload an image
-  const uploadResult = await cloudinary.uploader
-    .upload(localFilePath, {
-      public_id: "shoes",
+  try {
+    // Upload an image
+    const uploadResult = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
-    })
-    .catch((error) => {
-      console.log(error);
-      fs.unlinkSync(localFilePath); // remove the locally saved temporary file as the upload operation got failed
     });
 
-  console.log(uploadResult);
-
-  // Optimize delivery by resizing and applying auto-format and auto-quality
-  const optimizeUrl = cloudinary.url("shoes", {
-    fetch_format: "auto",
-    quality: "auto",
-  });
-
-  console.log(optimizeUrl);
-
-  // Transform the image: auto-crop to square aspect_ratio
-  const autoCropUrl = cloudinary.url("shoes", {
-    crop: "auto",
-    gravity: "auto",
-    width: 500,
-    height: 500,
-  });
-
-  console.log(autoCropUrl);
+    // console.log("File is uploaded on Cloudinary", uploadResult.url);
+    // console.log("uploadResult", uploadResult);
+    fs.unlinkSync(localFilePath); // remove the locally saved temporary file as the upload operation got failed
+    return uploadResult;
+  } catch (error) {
+    console.error("Upload Error:", error);
+    fs.unlinkSync(localFilePath); // remove the locally saved temporary file as the upload operation got failed
+    throw error; // rethrow error for further handling
+    return null;
+  }
 };
 
 export { uploadOnCloudniany };

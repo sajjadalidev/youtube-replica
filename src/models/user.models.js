@@ -28,7 +28,6 @@ const userSchema = new Schema(
     fullName: {
       required: true,
       type: String,
-      unique: true,
       trim: true,
       index: true,
     },
@@ -52,10 +51,8 @@ const userSchema = new Schema(
 
 // with mongoose we can use middleware
 userSchema.pre("save", async function (next) {
-  // only run this middleware when we modified passowrd
-  if (this.isModified("password")) {
-    this.password = bcrypt.hash(this.password, 10);
-  }
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
