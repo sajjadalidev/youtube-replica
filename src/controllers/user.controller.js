@@ -19,9 +19,19 @@ const userRegister = asyncHandler(async (req, res) => {
     throw new ApiError(409, "Username or email Already exist!");
   }
 
-  const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  // const avatarLocalPath = req.files?.avatar[0]?.path;
+  // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  // we need to check avatar & cover image with custom check either user give these imput or not
 
+  let avatarLocalPath;
+  let coverImageLocalPath;
+
+  if (req.files && Array.isArray(req.files.avatar)) {
+    avatarLocalPath = req.files.avatar[0].path;
+  }
+  if (req.files && Array.isArray(req.files.coverImage)) {
+    coverImageLocalPath = req.files.coverImage[0].path;
+  }
   //STEP #04 Check required avatar path
   if (!avatarLocalPath) {
     throw new ApiError(400, "Avatar file is required!");
@@ -38,7 +48,7 @@ const userRegister = asyncHandler(async (req, res) => {
   const newUser = await User.create({
     fullName,
     avatar: avatar.url,
-    coverImage: coverImage.url || "",
+    coverImage: coverImage?.url || "",
     email,
     password,
     username: username.toLowerCase(),
