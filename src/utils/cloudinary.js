@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import { fs } from "fs";
+import fs from "fs";
 
 const uploadOnCloudniany = async (localFilePath) => {
   // Configuration
@@ -41,3 +41,5 @@ const uploadOnCloudniany = async (localFilePath) => {
 
   console.log(autoCropUrl);
 };
+
+export { uploadOnCloudniany };
