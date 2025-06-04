@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "./../models/user.models.js";
 import { uploadOnCloudniany } from "../utils/cloudinary.js";
+import jwt from "jsonwebtoken";
 
 // Utils function to get access & Referesh token
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -158,4 +159,58 @@ const userLogout = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "User logged Out"));
 });
 
-export { userRegister, userLogin, userLogout };
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  const { incomingRefreshToken } = req.cookies || req.body;
+  // Step #00: Check if refresh token is present
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, "Unauthorized request, login first!");
+  }
+
+  try {
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.ACCESS_TOKEN_SECRET
+    );
+
+    // Step #01: Check if refresh token is valid
+    const user = await User.findById(decodedToken?._id);
+    if (!user) {
+      throw new ApiError(401, "Invalid refresh token!");
+    }
+    // Step #01.1: Check if refresh token is valid
+    if (user.refreshToken !== incomingRefreshToken) {
+      throw new ApiError(401, " Refresh token is invalid!");
+    }
+
+    // Step #02: Generate new access token
+    const { accessToken, refreshToken } =
+      await user.generateAccessAndRefreshTokens();
+    if (!accessToken) {
+      throw new ApiError(
+        500,
+        "Something went wrong while generating access token"
+      );
+    }
+    // Step #03: Send response with new access token
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: true,
+      })
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+      })
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, refreshToken },
+          "Access token refreshed successfully"
+        )
+      );
+  } catch (error) {
+    throw new ApiError(500, "Something went wrong while refreshing token");
+  }
+});
+export { userRegister, userLogin, userLogout, refreshAccessToken };

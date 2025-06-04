@@ -86,4 +86,15 @@ userSchema.methods.generaterefreshToken = async function () {
     }
   );
 };
+
+userSchema.methods.generateAccessAndRefreshTokens = async function () {
+  const accessToken = await this.generateAccessToken();
+  const refreshToken = await this.generaterefreshToken();
+
+  // save refresh token in the db
+  this.refreshToken = refreshToken;
+  await this.save();
+
+  return { accessToken, refreshToken };
+};
 export const User = model("User", userSchema);
