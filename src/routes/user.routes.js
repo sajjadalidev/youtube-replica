@@ -35,10 +35,12 @@ router.route("/refresh-token").post(refreshAccessToken);
 router.route("/change-password").post(verifyJWT, changeCurrentPassword);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
 router.route("/update-user-profile").patch(verifyJWT, updateUserProfile);
-router.route("/user-avatar/update").patch(verifyJWT, upload, updateAvatar);
+router
+  .route("/user-avatar/update")
+  .patch(verifyJWT, upload.single("avatar"), updateAvatar);
 router
   .route("/user-cover-image/update")
-  .patch(verifyJWT, upload, updateUserCoverImage);
+  .patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
 router
   .route("/user-channel-profile/:username")
   .get(verifyJWT, getUserChannelProfile);
