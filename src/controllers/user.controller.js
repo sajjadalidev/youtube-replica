@@ -4,6 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "./../models/user.models.js";
 import { uploadOnCloudniany } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
+import { mongoose } from "mongoose";
 
 // Utils function to get access & Referesh token
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -403,6 +404,59 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     );
 });
 
+const getUserWatchHistory = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  // Step #01: Fetch user watch history
+  const watchHistory = await User.aggregate([
+    { $match: { _id: new mongoose.Types.ObjectId(userId) } },
+    {
+      $lookup: {
+        from: "videos", // collection name in MongoDB
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users", // collection name in MongoDB
+              localField: "user",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: { $arrayElemAt: ["$owner", 0] }, // Get the first element of the owner array
+            },
+          },
+        ],
+      },
+    },
+  ]);
+  if (!watchHistory?.length) {
+    throw new ApiError(404, "Watch history not found!");
+  }
+  // Step #02: Return user watch history
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "User watch history fetched successfully!"
+      )
+    );
+});
+
 export {
   userRegister,
   userLogin,
@@ -414,4 +468,5 @@ export {
   updateAvatar,
   updateUserCoverImage,
   getUserChannelProfile,
+  getUserWatchHistory,
 };
