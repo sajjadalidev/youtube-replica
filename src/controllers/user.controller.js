@@ -142,7 +142,7 @@ const userLogout = asyncHandler(async (req, res) => {
     req.user._id,
     {
       $set: {
-        refreshToken: undefined,
+        refreshToken: undefined, // if with undefined not work : use 1
       },
     },
     { new: true }
