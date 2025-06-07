@@ -371,14 +371,6 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
       $project: {
         password: 0,
         refreshToken: 0, // 0 mean exclude this field & 1 mean to include this field
-        fullName: 1,
-        username: 1,
-        subscribersCount: 1,
-        subscribedToChannelsCount: 1,
-        isSubscribed: 1,
-        avatar: 1,
-        coverImage: 1,
-        email: 1,
       },
     },
   ]);
