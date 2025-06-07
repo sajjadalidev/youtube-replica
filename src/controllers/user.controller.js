@@ -390,10 +390,12 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 });
 
 const getUserWatchHistory = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const username = req.params.username;
+  // write code to get user
+  const user = await User.find({ username }).select("-password -refreshToken");
   // Step #01: Fetch user watch history
   const watchHistory = await User.aggregate([
-    { $match: { _id: new mongoose.Types.ObjectId(userId) } },
+    { $match: { _id: new mongoose.Types.ObjectId(user?._id) } },
     {
       $lookup: {
         from: "videos", // collection name in MongoDB
